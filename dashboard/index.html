@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Burnside Bryndwr Community Network Facebook, website and email analytics dashboard.">
+  <meta name="theme-color" content="#063b34">
+  <title>BBCN Communications Analytics</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      var style = new URLSearchParams(window.location.search).get('style');
+      if (style === 'editorial' || style === 'studio') {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'styles-' + style + '.css';
+        document.head.appendChild(link);
+        var previewLink = document.createElement('link');
+        previewLink.rel = 'stylesheet';
+        previewLink.href = 'styles-preview.css';
+        document.head.appendChild(previewLink);
+      }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="style-preview.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#dashboard">Skip to dashboard</a>
+
+  <header class="masthead">
+    <div class="masthead__inner">
+      <div class="identity">
+        <span class="identity__logo-frame">
+          <img class="identity__logo" src="bbcn-logo.png" alt="BBCN logo">
+        </span>
+        <div>
+          <p class="eyebrow">Communications analytics dashboard</p>
+          <h1>Burnside Bryndwr Community Network</h1>
+        </div>
+      </div>
+      <div class="connection" id="connectionState" role="status" aria-live="polite">
+        <span class="connection__dot" aria-hidden="true"></span>
+        <span>Loading data</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar-shell">
+    <form class="toolbar" id="dateForm">
+      <label class="field">
+        <span>View</span>
+        <select id="datePreset" name="preset">
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last 12 months</option>
+          <option value="year">This year</option>
+          <option value="custom">Custom dates</option>
+        </select>
+      </label>
+      <div class="custom-dates" id="customDates" hidden>
+        <label class="field"><span>From</span><input id="dateFrom" type="date"></label>
+        <label class="field"><span>To</span><input id="dateTo" type="date"></label>
+      </div>
+      <button class="button button--primary" type="submit">Apply</button>
+      <button class="button button--quiet" id="refreshButton" type="button">Refresh</button>
+      <p class="toolbar__range" id="selectedRange">—</p>
+    </form>
+    <nav class="channel-nav" aria-label="Dashboard sections">
+      <a class="channel-nav__facebook" href="#facebook"><span aria-hidden="true">01</span> Facebook</a>
+      <a class="channel-nav__website" href="#website"><span aria-hidden="true">02</span> Hail website</a>
+      <a class="channel-nav__email" href="#email"><span aria-hidden="true">03</span> Sender email</a>
+    </nav>
+  </div>
+
+  <div class="notice" id="errorNotice" role="alert" hidden>
+    <strong>Some data could not be loaded.</strong>
+    <span id="errorMessage"></span>
+  </div>
+
+  <main id="dashboard" class="dashboard" aria-busy="true">
+    <section class="overview" aria-labelledby="overviewTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow eyebrow--dark">Across our channels</p>
+          <h2 id="overviewTitle">At a glance</h2>
+        </div>
+        <p class="updated" id="lastUpdated">Loading…</p>
+      </div>
+      <div class="metric-grid">
+        <article class="metric metric--facebook">
+          <p class="metric__label">Facebook followers</p>
+          <p class="metric__value" id="metricFollowers">—</p>
+          <p class="metric__comparison" id="metricFollowersChange">—</p>
+          <p class="metric__note">Current audience</p>
+        </article>
+        <article class="metric metric--facebook">
+          <p class="metric__label">Facebook impressions</p>
+          <p class="metric__value" id="metricImpressions">—</p>
+          <p class="metric__comparison" id="metricImpressionsChange">—</p>
+          <p class="metric__note">During selected dates</p>
+        </article>
+        <article class="metric metric--website">
+          <p class="metric__label">Website visits</p>
+          <p class="metric__value" id="metricWebsiteVisits">—</p>
+          <p class="metric__comparison" id="metricWebsiteVisitsChange">—</p>
+          <p class="metric__note" id="websiteVisitsNote">Completed reporting periods</p>
+        </article>
+        <article class="metric metric--email">
+          <p class="metric__label">Emails delivered</p>
+          <p class="metric__value" id="metricDelivered">—</p>
+          <p class="metric__comparison" id="metricDeliveredChange">—</p>
+          <p class="metric__note">Regular campaigns</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="channel-section channel-section--facebook" id="facebook" aria-labelledby="facebookTitle">
+      <div class="channel-heading">
+        <div>
+          <p class="channel-kicker channel-kicker--facebook"><span>01</span> Facebook</p>
+          <h2 id="facebookTitle">Audience and engagement</h2>
+        </div>
+        <p>Page performance and recent post response.</p>
+      </div>
+
+      <div class="mini-metrics">
+        <article><span>Followers gained</span><strong id="facebookGained">—</strong></article>
+        <article><span>Followers lost</span><strong id="facebookLost">—</strong></article>
+        <article><span>Reach</span><strong id="facebookReach">—</strong></article>
+        <article><span>Engagement rate</span><strong id="facebookEngagement">—</strong></article>
+      </div>
+
+      <div class="panel-grid">
+        <article class="panel panel--wide">
+          <div class="panel__heading">
+            <div><h3>Followers evolution</h3><p>Daily follower snapshots</p></div>
+          </div>
+          <div class="chart-wrap chart-wrap--large"><canvas id="followersChart" role="img" aria-label="Facebook follower evolution chart"></canvas></div>
+          <p class="empty-state" id="followersEmpty" hidden>No follower history is available for these dates.</p>
+        </article>
+        <article class="panel">
+          <div class="panel__heading">
+            <div><h3>Followers gained and lost</h3><p>Daily movement</p></div>
+          </div>
+          <div class="chart-wrap"><canvas id="gainLossChart" role="img" aria-label="Facebook followers gained and lost chart"></canvas></div>
+          <p class="empty-state" id="gainLossEmpty" hidden>No follower movement is available for these dates.</p>
+        </article>
+        <article class="panel">
+          <div class="panel__heading">
+            <div><h3>Impressions and reach</h3><p>Content visibility by day</p></div>
+          </div>
+          <div class="chart-wrap"><canvas id="visibilityChart" role="img" aria-label="Facebook impressions and reach chart"></canvas></div>
+          <p class="empty-state" id="visibilityEmpty" hidden>No visibility history is available for these dates.</p>
+        </article>
+        <article class="panel panel--gauge">
+          <div class="panel__heading">
+            <div><h3>Engagement rate</h3><p>Reactions, comments and shares ÷ followers</p></div>
+            <span class="info" tabindex="0" data-tooltip="A snapshot based on the most recent day in the selected range.">i</span>
+          </div>
+          <div class="gauge-wrap">
+            <canvas id="engagementChart" role="img" aria-label="Facebook engagement rate gauge"></canvas>
+            <div class="gauge-value"><strong id="engagementGaugeValue">—</strong><span>engagement</span></div>
+          </div>
+        </article>
+        <article class="panel panel--wide">
+          <div class="panel__heading">
+            <div><h3>Community response</h3><p>Reactions and comments by day</p></div>
+          </div>
+          <div class="chart-wrap"><canvas id="responseChart" role="img" aria-label="Facebook reactions and comments chart"></canvas></div>
+          <p class="empty-state" id="responseEmpty" hidden>No reactions or comments are available for these dates.</p>
+        </article>
+      </div>
+
+      <article class="panel panel--table">
+        <div class="panel__heading">
+          <div><h3>Top 5 performing posts</h3><p>Posts published during the selected period, ranked by reactions, comments and shares</p></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="numeric">Rank</th><th>Post</th><th>Published</th><th class="numeric">Reactions</th><th class="numeric">Comments</th><th class="numeric">Shares</th><th class="numeric">Total</th><th class="numeric">Rate</th></tr></thead>
+            <tbody id="facebookPostsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="channel-section channel-section--website" id="website" aria-labelledby="websiteTitle">
+      <div class="channel-heading">
+        <div>
+          <p class="channel-kicker channel-kicker--website"><span>02</span> Hail website</p>
+          <h2 id="websiteTitle">Website readership</h2>
+        </div>
+        <p>Visits to the website and recently published articles.</p>
+      </div>
+
+      <div class="mini-metrics">
+        <article><span>Website visits</span><strong id="websiteSessions">—</strong></article>
+        <article><span>Page views</span><strong id="websiteViews">—</strong></article>
+        <article><span>Engaged visits</span><strong id="websiteEngaged">—</strong></article>
+        <article><span>Engagement rate</span><strong id="websiteEngagementRate">—</strong></article>
+      </div>
+
+      <article class="panel panel--wide">
+        <div class="panel__heading panel__heading--wrap">
+          <div><h3>Website traffic</h3><p>Visits and page views by reporting period</p></div>
+          <div class="segment" id="websiteGranularity" aria-label="Website traffic interval">
+            <button type="button" data-granularity="week" aria-pressed="true">Week</button>
+            <button type="button" data-granularity="month" aria-pressed="false">Month</button>
+            <button type="button" data-granularity="year" aria-pressed="false">Year</button>
+          </div>
+        </div>
+        <div class="chart-wrap chart-wrap--large"><canvas id="websiteTrafficChart" role="img" aria-label="Website visits and page views chart"></canvas></div>
+        <p class="empty-state" id="websiteTrafficEmpty" hidden>No website reporting periods overlap these dates.</p>
+      </article>
+
+      <div class="attribution-summary" aria-label="Website visits attributed by channel">
+        <article><span>Email</span><strong id="sourceEmail">—</strong><small>website visits</small></article>
+        <article><span>Social</span><strong id="sourceSocial">—</strong><small>website visits</small></article>
+        <article><span>Search</span><strong id="sourceSearch">—</strong><small>website visits</small></article>
+        <article><span>Referral</span><strong id="sourceReferral">—</strong><small>website visits</small></article>
+      </div>
+
+      <div class="panel-grid attribution-grid">
+        <article class="panel">
+          <div class="panel__heading">
+            <div><h3>Traffic sources</h3><p>Share of website visits by acquisition channel</p></div>
+          </div>
+          <div class="chart-wrap"><canvas id="trafficSourcesChart" role="img" aria-label="Website visits by traffic source chart"></canvas></div>
+          <p class="empty-state" id="trafficSourcesEmpty" hidden>No traffic-source data is available for these dates.</p>
+        </article>
+        <article class="panel panel--source-table">
+          <div class="panel__heading">
+            <div><h3>Cross-channel attribution</h3><p>Sources that generated website visits</p></div>
+          </div>
+          <div class="table-wrap table-wrap--compact">
+            <table>
+              <thead><tr><th>Channel</th><th>Source / medium</th><th class="numeric">Visits</th><th class="numeric">Share</th></tr></thead>
+              <tbody id="trafficSourcesBody"></tbody>
+            </table>
+          </div>
+          <p class="attribution-note">Campaign-level attribution requires UTM-tagged links in Facebook posts and Sender campaigns.</p>
+        </article>
+      </div>
+
+      <article class="panel panel--table">
+        <div class="panel__heading panel__heading--wrap">
+          <div><h3>Recent articles</h3><p>Articles published during the rolling six-month window</p></div>
+          <label class="compact-field">Sort by
+            <select id="articleSort"><option value="views">Most viewed</option><option value="date">Newest</option><option value="title">Title</option></select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Article</th><th>Published</th><th class="numeric">Views</th><th class="numeric">Visits</th><th class="numeric">Users</th></tr></thead>
+            <tbody id="articlesBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="channel-section channel-section--email" id="email" aria-labelledby="emailTitle">
+      <div class="channel-heading">
+        <div>
+          <p class="channel-kicker channel-kicker--email"><span>03</span> Sender.net</p>
+          <h2 id="emailTitle">Email campaigns and subscribers</h2>
+        </div>
+        <p>Regular campaign delivery and audience movement.</p>
+      </div>
+
+      <div class="mini-metrics mini-metrics--six">
+        <article><span>Campaigns</span><strong id="emailCampaigns">—</strong></article>
+        <article><span>Recipients <span class="info" tabindex="0" data-metric-help="recipients">i</span></span><strong id="emailRecipients">—</strong></article>
+        <article><span>Sends <span class="info" tabindex="0" data-metric-help="sends">i</span></span><strong id="emailSends">—</strong></article>
+        <article><span>Delivered <span class="info" tabindex="0" data-metric-help="delivered">i</span></span><strong id="emailDelivered">—</strong></article>
+        <article><span>Unique opens <span class="info" tabindex="0" data-metric-help="unique_opens">i</span></span><strong id="emailOpens">—</strong></article>
+        <article><span>Bounces <span class="info" tabindex="0" data-metric-help="bounces">i</span></span><strong id="emailBounces">—</strong></article>
+      </div>
+
+      <div class="panel-grid">
+        <article class="panel panel--wide">
+          <div class="panel__heading">
+            <div><h3>Campaign delivery</h3><p>Delivered messages and unique opens</p></div>
+          </div>
+          <div class="chart-wrap chart-wrap--large"><canvas id="campaignChart" role="img" aria-label="Email campaign delivery and unique opens chart"></canvas></div>
+          <p class="empty-state" id="campaignEmpty" hidden>No regular campaigns were sent during these dates.</p>
+        </article>
+        <article class="panel panel--wide">
+          <div class="panel__heading">
+            <div><h3>Subscriber growth</h3><p>Total subscribers and weekly net change over 12 months</p></div>
+          </div>
+          <div class="chart-wrap chart-wrap--large"><canvas id="subscriberChart" role="img" aria-label="Email subscriber growth chart"></canvas></div>
+          <p class="empty-state" id="subscriberEmpty" hidden>Subscriber snapshots will appear after the weekly collector runs.</p>
+        </article>
+      </div>
+
+      <div class="mini-metrics subscriber-metrics">
+        <article><span>Total subscribers</span><strong id="subscriberTotal">—</strong></article>
+        <article><span>New</span><strong id="subscriberNew">—</strong></article>
+        <article><span>Unsubscribed</span><strong id="subscriberLost">—</strong></article>
+        <article><span>Net change</span><strong id="subscriberNet">—</strong></article>
+      </div>
+
+      <article class="panel panel--table">
+        <div class="panel__heading panel__heading--wrap">
+          <div><h3>Email campaigns</h3><p>Regular campaigns sent during the selected dates</p></div>
+          <label class="compact-field">Sort by
+            <select id="campaignSort"><option value="date">Newest</option><option value="delivered">Delivered</option><option value="opens">Unique opens</option></select>
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campaign</th><th>Sent</th><th class="numeric">Recipients</th><th class="numeric">Sends</th><th class="numeric">Delivered</th><th class="numeric">Bounces</th><th class="numeric">Unique opens</th></tr></thead>
+            <tbody id="campaignsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p><strong>BBCN</strong> · Burnside Bryndwr Community Network</p>
+    <p>Facebook · Website · Email</p>
+  </footer>
+</body>
+</html>

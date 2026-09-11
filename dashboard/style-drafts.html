@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BBCN dashboard style drafts</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #123b34; background: #eef6f2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 2rem; }
+    main { width: min(940px, 100%); }
+    header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    img { width: 72px; height: 72px; object-fit: contain; }
+    h1 { margin: 0 0 .25rem; font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -.04em; }
+    p { margin: 0; color: #58716a; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }
+    article { display: flex; min-height: 310px; flex-direction: column; justify-content: space-between; padding: 1.7rem; border-radius: 24px; box-shadow: 0 18px 55px rgba(6,59,52,.12); }
+    article:first-child { background: #fffef9; border-top: 8px solid #009245; border-radius: 4px; }
+    article:last-child { color: #f4fffb; background: radial-gradient(circle at 90% 10%, #075949, transparent 50%), #071411; }
+    article:last-child p { color: #a8bbb6; }
+    .number { font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h2 { margin: .75rem 0; font-size: 2rem; letter-spacing: -.035em; }
+    a { display: inline-flex; width: fit-content; padding: .8rem 1.05rem; border-radius: 999px; text-decoration: none; font-weight: 750; background: #009245; color: white; }
+    article:last-child a { color: #04100d; background: #26dba0; }
+    .current { margin-top: 1.4rem; text-align: center; }
+    .current a { background: transparent; color: #123b34; text-decoration: underline; }
+    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="bbcn-logo.png" alt="BBCN logo">
+      <div><h1>Dashboard style drafts</h1><p>Choose a direction to preview with sample data and working interactions.</p></div>
+    </header>
+    <div class="grid">
+      <article>
+        <div><span class="number">Concept 01</span><h2>Community report</h2><p>A calm, editorial treatment with paper-like surfaces, strong rules and generous reading space. Designed to feel credible in committee meetings and printed reports.</p></div>
+        <a href="index.html?style=editorial">Open concept</a>
+      </article>
+      <article>
+        <div><span class="number">Concept 02</span><h2>Insights studio</h2><p>A focused dark workspace with vivid channel signals, translucent data panels and a more energetic live-monitoring feel.</p></div>
+        <a href="index.html?style=studio">Open concept</a>
+      </article>
+    </div>
+    <p class="current"><a href="index.html">Return to the unchanged current style</a></p>
+  </main>
+</body>
+</html>

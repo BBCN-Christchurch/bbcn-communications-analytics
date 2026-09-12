@@ -295,15 +295,22 @@ function fetchAndTransformAnalytics_(lookbackDays) {
   const pagePostEngagements = getPageInsightOrEmpty_('page_post_engagements', { period: 'day', since: dateRange.since, until: dateRange.until });
   const rawPosts = getRecentPosts_();
 
-  // page_follows may not return historic values for every eligible Page. The Page field
-  // is a reliable current-count fallback and still provides the required daily
-  // snapshot history from the first successful refresh onward.
+  // Page Insights can be delayed by several days. Always merge the Page's current
+  // followers_count into today's series so each successful refresh produces a
+  // dependable daily snapshot without discarding delayed historical values.
   const followersEvolution = insightSeries_(pageFollows, 'followers');
-  if (!followersEvolution.length) {
-    const currentFollowers = getCurrentPageFollowers_();
-    followersEvolution.push({ date: localDate_(new Date()), followers: currentFollowers });
-    Logger.log('page_follows returned no data; saved a followers_count snapshot instead.');
+  const today = localDate_(new Date());
+  const currentFollowers = getCurrentPageFollowers_();
+  const todayFollowerRow = followersEvolution.find(function(row) {
+    return row.date === today;
+  });
+  if (todayFollowerRow) {
+    todayFollowerRow.followers = currentFollowers;
+  } else {
+    followersEvolution.push({ date: today, followers: currentFollowers });
+    followersEvolution.sort(function(a, b) { return a.date.localeCompare(b.date); });
   }
+  Logger.log('Saved follower snapshot for ' + today + ': ' + currentFollowers);
   // Meta has no replacement for direct adds/removes. Derive a conservative
   // daily net split from consecutive daily follower snapshots.
   const gainedLostDaily = deriveGainedLostFromFollowers_(followersEvolution);
@@ -322,7 +329,6 @@ function fetchAndTransformAnalytics_(lookbackDays) {
   const engagementRate = followerCount > 0
     ? ((postTotals.reactions + postTotals.comments + postTotals.shares) / followerCount) * 100
     : 0;
-  const today = localDate_(new Date());
 
   return {
     page_followers: followerCount,

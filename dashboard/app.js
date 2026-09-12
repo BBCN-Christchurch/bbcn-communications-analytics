@@ -60,7 +60,15 @@
       }
     });
 
-    // Editing either date explicitly selects Custom dates so the dropdown cannot overwrite it.\r\n    ['dateFrom', 'dateTo'].forEach(function (id) {\r\n      byId(id).addEventListener('change', function () {\r\n        byId('datePreset').value = 'custom';\r\n        byId('customDates').hidden = false;\r\n      });\r\n    });\r\n\r\n    byId('dateForm').addEventListener('submit', function (event) {
+    // Editing either date explicitly selects Custom dates so the dropdown cannot overwrite it.
+    ['dateFrom', 'dateTo'].forEach(function (id) {
+      byId(id).addEventListener('change', function () {
+        byId('datePreset').value = 'custom';
+        byId('customDates').hidden = false;
+      });
+    });
+
+    byId('dateForm').addEventListener('submit', function (event) {
       event.preventDefault();
       const preset = byId('datePreset').value;
       const nextRange = preset === 'custom'

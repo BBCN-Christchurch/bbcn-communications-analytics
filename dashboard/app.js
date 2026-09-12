@@ -229,7 +229,13 @@
       dataset('Reactions', valuesForDates(reactions, 'reactions', responses), colours.facebook),
       dataset('Comments', valuesForDates(comments, 'comments', responses), colours.gold)
     ]);
-    renderFacebookPosts(data.top_performing_posts || topPostsForRange(data.recent_posts || [], data.page_followers));
+    const topPosts = data.top_performing_posts || topPostsForRange(data.recent_posts || [], data.page_followers);
+    const rangedPosts = (data.recent_posts || []).filter(function (post) {
+      const date = dateOnly(post.created_time);
+      return date && date >= state.range.from && date <= state.range.to;
+    });
+    renderFacebookPosts(topPosts);
+    renderCommentPosts(rangedPosts);
   }
 
   function renderWebsite() {
@@ -435,6 +441,39 @@
     });
   }
 
+  function renderCommentPosts(posts) {
+    const body = clearBody('facebookCommentPostsBody');
+    const rows = posts.filter(function (post) { return numeric(post.comments) > 0; })
+      .sort(function (a, b) { return numeric(b.comments) - numeric(a.comments); });
+    if (!rows.length) { appendEmptyRow(body, 4, 'No posts with comments were found for these dates.'); return; }
+    rows.slice(0, 10).forEach(function (post, index) {
+      const row = document.createElement('tr');
+      appendNumberCell(row, index + 1);
+      appendPostLinkCell(row, post);
+      appendTextCell(row, post.created_time ? formatDate(post.created_time) : '—');
+      appendNumberCell(row, post.comments);
+      body.appendChild(row);
+    });
+  }
+
+  function appendPostLinkCell(row, post) {
+    const cell = document.createElement('td');
+    const label = document.createElement('span');
+    label.className = 'post-link';
+    label.textContent = cleanPostLabel(post.message || 'Facebook post');
+    if (isSafeWebUrl(post.permalink_url)) {
+      const link = document.createElement('a');
+      link.className = 'post-link'; link.href = post.permalink_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.appendChild(label); cell.appendChild(link);
+    } else cell.appendChild(label);
+    const id = document.createElement('small'); id.textContent = post.post_id || ''; cell.appendChild(id);
+    row.appendChild(cell);
+  }
+
+  function cleanPostLabel(value) {
+    const cleaned = String(value || '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim();
+    return truncate(cleaned || 'Facebook post', 92);
+  }
   function renderFacebookPosts(posts) {
     const body = clearBody('facebookPostsBody');
     if (!posts.length) { appendEmptyRow(body, 8, 'No dated Facebook posts are available for this period.'); return; }
@@ -442,7 +481,7 @@
       const row = document.createElement('tr');
       appendNumberCell(row, index + 1);
       const postCell = document.createElement('td');
-      const label = truncate(post.message || 'Facebook post', 92);
+      const label = cleanPostLabel(post.message || 'Facebook post');
       if (isSafeWebUrl(post.permalink_url)) {
         const link = document.createElement('a');
         link.className = 'post-link'; link.href = post.permalink_url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = label;

@@ -272,8 +272,8 @@ function dashboardDateOnly_(value) {
     return localDate_(value);
   }
   const text = String(value || '').trim();
-  const match = text.match(/^\d{4}-\d{2}-\d{2}/);
-  if (match) return match[0];
+  const isoDateMatch = text.match(/^\d{4}-\d{2}-\d{2}/);
+  if (isoDateMatch) return isoDateMatch[0];
   const parsed = new Date(text);
   return isNaN(parsed.getTime()) ? '' : localDate_(parsed);
 }

@@ -178,7 +178,7 @@
   function renderFacebook() {
     const data = state.data.facebook;
     if (!data) {
-      setTexts({ metricFollowers: '—', metricFollowersChange: '—', metricImpressions: '—', metricImpressionsChange: '—', facebookGained: '—', facebookLost: '—', facebookReach: '—', facebookEngagement: '—', engagementGaugeValue: '—' });
+      setTexts({ facebookTotal: '—', metricFollowers: '—', metricFollowersChange: '—', metricImpressions: '—', metricImpressionsChange: '—', facebookGained: '—', facebookLost: '—', facebookReach: '—', facebookEngagement: '—', engagementGaugeValue: '—' });
       ['followersChart', 'gainLossChart', 'visibilityChart', 'engagementChart', 'responseChart'].forEach(destroyChart);
       renderEmptyTable('facebookPostsBody', 8, 'Facebook data is unavailable.');
       return;
@@ -191,17 +191,26 @@
     const engagement = filterByDate(data.engagement_history || [], 'date');
     const reactions = filterByDate(data.reactions_history || [], 'date');
     const comments = filterByDate(data.comments_history || [], 'date');
+    const rangedPosts = (data.recent_posts || []).filter(function (post) {
+      const date = dateOnly(post.created_time);
+      return date && date >= state.range.from && date <= state.range.to;
+    });
+    const derivedResponse = derivePostResponse(rangedPosts);
+    const responseRows = derivedResponse.length ? derivedResponse : mergeDatedSeries(reactions, comments);
     const currentFollowers = followers.length ? numeric(followers[followers.length - 1].followers) : numeric(data.page_followers);
     const gained = movement.length ? sum(movement, 'gained') : numeric(data.gained_followers);
     const lost = movement.length ? sum(movement, 'lost') : numeric(data.lost_followers);
     const impressionTotal = impressions.length ? sum(impressions, 'impressions') : numeric(data.impressions);
     const reachTotal = reach.length ? sum(reach, 'reach') : numeric(data.reach);
-    const latestEngagement = engagement.length
+    const derivedEngagement = currentFollowers && rangedPosts.length
+      ? rangedPosts.reduce(function (total, post) { return total + numeric(post.reactions) + numeric(post.comments) + numeric(post.shares); }, 0) / currentFollowers * 100
+      : 0;
+    const latestEngagement = derivedEngagement || (engagement.length
       ? numeric(engagement[engagement.length - 1].engagement_rate)
-      : numeric(data.engagement_rate);
+      : numeric(data.engagement_rate));
 
     setTexts({
-      metricFollowers: formatNumber(currentFollowers), metricImpressions: formatNumber(impressionTotal),
+      facebookTotal: formatNumber(currentFollowers), metricFollowers: formatNumber(currentFollowers), metricImpressions: formatNumber(impressionTotal),
       facebookGained: formatSigned(gained), facebookLost: lost ? '−' + formatNumber(lost) : '0',
       facebookReach: formatNumber(reachTotal), facebookEngagement: formatPercent(latestEngagement),
       engagementGaugeValue: formatPercent(latestEngagement)
@@ -224,17 +233,12 @@
       dataset('Reach', valuesForDates(reach, 'reach', mergeDatedSeries(impressions, reach)), colours.website, true)
     ]);
     renderGauge(latestEngagement);
-    const responses = mergeDatedSeries(reactions, comments);
-    renderBarChart('responseChart', 'responseEmpty', responses, [
-      dataset('Reactions', valuesForDates(reactions, 'reactions', responses), colours.facebook),
-      dataset('Comments', valuesForDates(comments, 'comments', responses), colours.gold)
+    renderBarChart('responseChart', 'responseEmpty', responseRows, [
+      dataset('Reactions', valuesForDates(responseRows, 'reactions', responseRows), colours.facebook),
+      dataset('Comments', valuesForDates(responseRows, 'comments', responseRows), colours.gold)
     ]);
     const topPosts = data.top_performing_posts || topPostsForRange(data.recent_posts || [], data.page_followers);
-    const rangedPosts = (data.recent_posts || []).filter(function (post) {
-      const date = dateOnly(post.created_time);
-      return date && date >= state.range.from && date <= state.range.to;
-    });
-    renderFacebookPosts(topPosts);
+    renderFacebookPosts(topPostsForRange(rangedPosts, currentFollowers));
     renderCommentPosts(rangedPosts);
   }
 
@@ -629,6 +633,17 @@
     return Object.keys(byDate).sort().map(function (date) { return byDate[date]; });
   }
 
+  function derivePostResponse(posts) {
+    const byDate = {};
+    posts.forEach(function (post) {
+      const date = dateOnly(post.created_time);
+      if (!date) return;
+      if (!byDate[date]) byDate[date] = { date: date, reactions: 0, comments: 0 };
+      byDate[date].reactions += numeric(post.reactions);
+      byDate[date].comments += numeric(post.comments);
+    });
+    return Object.keys(byDate).sort().map(function (date) { return byDate[date]; });
+  }
   function valuesForDates(rows, field, dates) {
     const lookup = {};
     rows.forEach(function (row) { lookup[dateOnly(row.date)] = numeric(row[field]); });

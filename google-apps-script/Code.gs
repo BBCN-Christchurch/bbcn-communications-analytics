@@ -189,12 +189,12 @@ function getDashboardData(fromDate, toDate) {
     period: range.current,
     page_followers: currentMetrics.page_followers,
     followers_evolution: followers.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), followers: toNumber_(row.followers) };
+      return { date: dashboardDateOnly_(row.date), followers: toNumber_(row.followers) };
     }),
     gained_followers: currentMetrics.gained_followers,
     lost_followers: currentMetrics.lost_followers,
     gained_lost_followers_daily: gainedLost.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), gained: toNumber_(row.gained), lost: toNumber_(row.lost) };
+      return { date: dashboardDateOnly_(row.date), gained: toNumber_(row.gained), lost: toNumber_(row.lost) };
     }),
     impressions: currentMetrics.impressions,
     reach: currentMetrics.reach,
@@ -202,19 +202,19 @@ function getDashboardData(fromDate, toDate) {
     // Additional history fields let the static dashboard apply its date filter
     // without changing the original data contract above.
     impressions_history: impressions.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), impressions: toNumber_(row.impressions) };
+      return { date: dashboardDateOnly_(row.date), impressions: toNumber_(row.impressions) };
     }),
     reach_history: reach.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), reach: toNumber_(row.reach) };
+      return { date: dashboardDateOnly_(row.date), reach: toNumber_(row.reach) };
     }),
     engagement_history: engagement.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), engagement_rate: toNumber_(row.engagement_rate) };
+      return { date: dashboardDateOnly_(row.date), engagement_rate: toNumber_(row.engagement_rate) };
     }),
     reactions_history: reactions.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), reactions: toNumber_(row.reactions) };
+      return { date: dashboardDateOnly_(row.date), reactions: toNumber_(row.reactions) };
     }),
     comments_history: comments.slice(-CONFIG.HISTORY_DAYS).map(function(row) {
-      return { date: String(row.date), comments: toNumber_(row.comments) };
+      return { date: dashboardDateOnly_(row.date), comments: toNumber_(row.comments) };
     }),
     recent_posts: recentPosts,
     top_performing_posts: topPosts,
@@ -268,8 +268,14 @@ function dashboardDateRanges_(fromDate, toDate) {
 }
 
 function dashboardDateOnly_(value) {
-  const match = String(value || '').match(/^\d{4}-\d{2}-\d{2}/);
-  return match ? match[0] : '';
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return localDate_(value);
+  }
+  const text = String(value || '').trim();
+  const match = text.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+  const parsed = new Date(text);
+  return isNaN(parsed.getTime()) ? '' : localDate_(parsed);
 }
 
 function dashboardDateInRange_(value, from, to) {
@@ -526,8 +532,18 @@ function upsertRows_(tabName, rows, keyIndex) {
   const existingCount = Math.max(0, sheet.getLastRow() - 1);
   const existing = existingCount ? sheet.getRange(2, 1, existingCount, headers.length).getValues() : [];
   const byKey = {};
-  existing.forEach(function(row) { if (row[keyIndex] !== '') byKey[String(row[keyIndex])] = row; });
-  rows.forEach(function(row) { byKey[String(row[keyIndex])] = row; });
+  const keyFor = function(row) {
+    const value = row[keyIndex];
+    return tabName === 'posts' ? String(value) : dashboardDateOnly_(value);
+  };
+  existing.forEach(function(row) {
+    const key = keyFor(row);
+    if (key) byKey[key] = row;
+  });
+  rows.forEach(function(row) {
+    const key = keyFor(row);
+    if (key) byKey[key] = row;
+  });
   const merged = Object.keys(byKey).sort().map(function(key) { return byKey[key]; });
   if (existingCount) sheet.getRange(2, 1, existingCount, headers.length).clearContent();
   if (merged.length) sheet.getRange(2, 1, merged.length, headers.length).setValues(merged);
@@ -577,7 +593,11 @@ function readRows_(tabName) {
       headers.forEach(function(header, index) { object[header] = row[index]; });
       return object;
     })
-    .sort(function(a, b) { return String(a.date || a.post_id).localeCompare(String(b.date || b.post_id)); });
+    .sort(function(a, b) {
+      const aKey = tabName === 'posts' ? String(a.post_id || '') : dashboardDateOnly_(a.date);
+      const bKey = tabName === 'posts' ? String(b.post_id || '') : dashboardDateOnly_(b.date);
+      return aKey.localeCompare(bKey);
+    });
 }
 
 function getSheet_(name) {
@@ -657,13 +677,13 @@ function deriveGainedLostFromFollowers_(incomingFollowers) {
   const storedByDate = {};
   try {
     readRows_('followers').forEach(function(row) {
-      storedByDate[String(row.date)] = toNumber_(row.followers);
+      storedByDate[dashboardDateOnly_(row.date)] = toNumber_(row.followers);
     });
   } catch (ignored) {
     // setup may call this before the followers sheet has been created.
   }
   (incomingFollowers || []).forEach(function(row) {
-    storedByDate[String(row.date)] = toNumber_(row.followers);
+    storedByDate[dashboardDateOnly_(row.date)] = toNumber_(row.followers);
   });
   const dates = Object.keys(storedByDate).sort();
   let previous = null;

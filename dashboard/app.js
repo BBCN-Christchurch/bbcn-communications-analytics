@@ -183,6 +183,7 @@
     const engagement = filterByDate(data.engagement_history || [], 'date');
     const reactions = filterByDate(data.reactions_history || [], 'date');
     const comments = filterByDate(data.comments_history || [], 'date');
+    const currentFollowers = followers.length ? numeric(followers[followers.length - 1].followers) : numeric(data.page_followers);
     const gained = movement.length ? sum(movement, 'gained') : numeric(data.gained_followers);
     const lost = movement.length ? sum(movement, 'lost') : numeric(data.lost_followers);
     const impressionTotal = impressions.length ? sum(impressions, 'impressions') : numeric(data.impressions);
@@ -192,7 +193,7 @@
       : numeric(data.engagement_rate);
 
     setTexts({
-      metricFollowers: formatNumber(data.page_followers), metricImpressions: formatNumber(impressionTotal),
+      metricFollowers: formatNumber(currentFollowers), metricImpressions: formatNumber(impressionTotal),
       facebookGained: formatSigned(gained), facebookLost: lost ? '−' + formatNumber(lost) : '0',
       facebookReach: formatNumber(reachTotal), facebookEngagement: formatPercent(latestEngagement),
       engagementGaugeValue: formatPercent(latestEngagement)
@@ -200,7 +201,7 @@
     colourChange('facebookGained', gained);
     colourChange('facebookLost', -lost);
     const facebookComparison = data.comparison || {};
-    renderComparison('metricFollowersChange', data.page_followers, facebookComparison.page_followers);
+    renderComparison('metricFollowersChange', currentFollowers, facebookComparison.page_followers);
     renderComparison('metricImpressionsChange', impressionTotal, facebookComparison.impressions);
 
     renderLineChart('followersChart', 'followersEmpty', followers, [
@@ -867,7 +868,15 @@
   function isoDate(date) { return [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-'); }
   function pad(value) { return String(value).padStart(2, '0'); }
   function parseDate(value) { const text = dateOnly(value); return text ? new Date(text + 'T12:00:00') : null; }
-  function dateOnly(value) { const match = String(value || '').match(/^\d{4}-\d{2}-\d{2}/); return match ? match[0] : ''; }
+  function dateOnly(value) {
+    const text = String(value || '').trim();
+    const isoMatch = text.match(/^\d{4}-\d{2}-\d{2}/);
+    if (isoMatch) return isoMatch[0];
+    const sheetDate = text.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/);
+    if (!sheetDate) return '';
+    const month = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' }[sheetDate[1]];
+    return month ? sheetDate[3] + '-' + month + '-' + String(sheetDate[2]).padStart(2, '0') : '';
+  }
   function capitalise(value) { return value.charAt(0).toUpperCase() + value.slice(1); }
   function truncate(value, length) { return String(value).length > length ? String(value).slice(0, length - 1) + '…' : String(value); }
   function hexToRgba(hex, alpha) { const number = parseInt(hex.slice(1), 16); return 'rgba(' + (number >> 16) + ',' + ((number >> 8) & 255) + ',' + (number & 255) + ',' + alpha + ')'; }

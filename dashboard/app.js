@@ -269,8 +269,12 @@
       return;
     }
     applyMetricHelp(data.metric_help || {});
-    const campaigns = data.campaigns || [];
-    const totals = data.campaign_totals || totalCampaigns(campaigns);
+    // Re-filter defensively so stale endpoint totals cannot leak outside the selected period.
+    const campaigns = (data.campaigns || []).filter(function (campaign) {
+      const date = dateOnly(campaign.sent_at);
+      return date && date >= state.range.from && date <= state.range.to;
+    });
+    const totals = totalCampaigns(campaigns);
     const growth = data.subscriber_growth || {};
     const selected = growth.selected_period || {};
     setTexts({
@@ -335,7 +339,7 @@
   }
 
   function renderCampaignChart(campaigns) {
-    const rows = campaigns.slice().sort(function (a, b) { return String(a.sent_at).localeCompare(String(b.sent_at)); });
+    const rows = campaigns.slice().sort(function (a, b) { return dateOnly(a.sent_at).localeCompare(dateOnly(b.sent_at)); });
     toggleChart('campaignChart', 'campaignEmpty', rows.length > 0);
     if (!rows.length || !window.Chart) { destroyChart('campaignChart'); return; }
     drawChart('campaignChart', {
@@ -505,7 +509,7 @@
     const rows = campaigns.slice();
     if (state.campaignSort === 'delivered') rows.sort(function (a, b) { return numeric(b.delivered) - numeric(a.delivered); });
     else if (state.campaignSort === 'opens') rows.sort(function (a, b) { return numeric(b.unique_opens) - numeric(a.unique_opens); });
-    else rows.sort(function (a, b) { return String(b.sent_at).localeCompare(String(a.sent_at)); });
+    else rows.sort(function (a, b) { return dateOnly(b.sent_at).localeCompare(dateOnly(a.sent_at)); });
     if (!rows.length) { appendEmptyRow(body, 7, 'No regular campaigns were sent during these dates.'); return; }
     rows.forEach(function (campaign) {
       const row = document.createElement('tr');
@@ -563,7 +567,7 @@
     return rows.filter(function (row) {
       const date = dateOnly(row[field]);
       return date && date >= state.range.from && date <= state.range.to;
-    }).sort(function (a, b) { return String(a[field]).localeCompare(String(b[field])); });
+    }).sort(function (a, b) { return dateOnly(a[field]).localeCompare(dateOnly(b[field])); });
   }
 
   function periodOverlapsRange(row) {

@@ -146,6 +146,9 @@ h3 { margin-bottom: 0.2rem; font-size: 1.05rem; line-height: 1.25; }
 .positive { color: var(--positive); }
 .negative { color: var(--negative); }
 
+
+.facebook-post-panels { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin-top: 0.9rem; }
+
 .panel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
 .panel { min-width: 0; padding: 1.15rem; border: 1px solid rgba(var(--channel-rgb, 1, 167, 115), 0.16); border-radius: var(--radius); background: rgba(255,255,255,0.96); box-shadow: 0 14px 38px rgba(6,59,52,0.065); }
 .panel--wide { grid-column: span 2; }
@@ -207,7 +210,10 @@ tbody tr:hover td { background: #fbfcfa; }
   .toolbar__range { width: 100%; margin: 0; }
 }
 @media (max-width: 680px) {
-  .panel-grid { grid-template-columns: 1fr; }
+  
+.facebook-post-panels { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin-top: 0.9rem; }
+
+.panel-grid { grid-template-columns: 1fr; }
   .panel--wide { grid-column: span 1; }
   .mini-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .panel__heading--wrap { align-items: flex-start; flex-direction: column; }

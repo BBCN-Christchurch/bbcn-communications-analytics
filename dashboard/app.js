@@ -297,7 +297,7 @@
     const selected = growth.selected_period || {};
     setTexts({
       metricDelivered: formatNumber(totals.delivered), emailCampaigns: formatNumber(totals.total_campaigns),
-      emailRecipients: formatNumber(totals.recipients), emailSends: formatNumber(totals.sends), emailDelivered: formatNumber(totals.delivered),
+      emailRecipients: formatNumber(totals.total_campaigns ? totals.recipients / totals.total_campaigns : 0), emailSends: formatNumber(totals.sends), emailDelivered: formatNumber(totals.delivered),
       emailOpens: formatNumber(totals.unique_opens), emailBounces: formatNumber(totals.bounces),
       subscriberTotal: formatNumber(selected.total_subscribers), subscriberNew: formatSigned(selected.new_subscribers),
       subscriberLost: numeric(selected.unsubscribed) ? '−' + formatNumber(selected.unsubscribed) : '0',

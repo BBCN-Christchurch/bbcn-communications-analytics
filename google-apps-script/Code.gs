@@ -382,7 +382,7 @@ function getRecentPosts_() {
 function transformPost_(rawPost) {
   const postId = rawPost.id;
   const reactionTypes = getPostInsight_(postId, 'post_reactions_by_type_total');
-  const postMediaViews = getPostReach_(postId);
+  const postMediaViews = getPostViews_(postId);
   // These deliberately use the explicit endpoints in the project mapping,
   // rather than relying solely on nested fields from /{page_id}/posts.
   const comments = getPostCommentCount_(postId);
@@ -405,7 +405,7 @@ function transformPost_(rawPost) {
   };
 }
 
-function getPostReach_(postId) {
+function getPostViews_(postId) {
   // post_media_view is the supported post-level exposure metric for this Page.
   return getPostInsight_(postId, 'post_media_view');
 }

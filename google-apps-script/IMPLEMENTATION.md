@@ -9,7 +9,7 @@ Running `setup()` in a Google Sheet creates these tabs and installs three time-b
 | `followers` | `date`, `followers` | Daily `page_follows` / `followers_count` snapshots; this is the followers-evolution history. |
 | `gained_lost` | `date`, `gained`, `lost` | Derived from consecutive follower snapshots because Meta retired direct adds/removes metrics. |
 | `impressions` | `date`, `impressions` | Daily `page_media_view`, retained under the existing dashboard's `impressions` field name. |
-| `reach` | `date`, `reach` | Daily `page_total_media_view_unique`, retained under the existing dashboard's `reach` field name. |
+| `reach` | `date`, `reach` | Daily unique Page media viewers, retained under the existing dashboard's `reach` field name. |
 | `engagement` | `date`, `engagement_rate`, `followers`, `reactions`, `comments`, `shares`, `page_post_engagements`, `post_media_views` | Daily calculated engagement and its supported inputs. |
 | `reactions` | `date`, `reactions` | Daily aggregate of reactions returned by `post_reactions_by_type_total`. |
 | `comments` | `date`, `comments` | Daily aggregate from each post's comments summary. |

@@ -180,7 +180,7 @@
     if (!data) {
       setTexts({ facebookTotal: '—', metricFollowers: '—', metricFollowersChange: '—', metricImpressions: '—', metricImpressionsChange: '—', facebookGained: '—', facebookLost: '—', facebookReach: '—', facebookEngagement: '—', engagementGaugeValue: '—' });
       ['followersChart', 'gainLossChart', 'visibilityChart', 'engagementChart', 'responseChart'].forEach(destroyChart);
-      renderEmptyTable('facebookPostsBody', 8, 'Facebook data is unavailable.');
+      renderEmptyTable('facebookPostsBody', 9, 'Facebook data is unavailable.');
       return;
     }
 
@@ -480,7 +480,7 @@
   }
   function renderFacebookPosts(posts) {
     const body = clearBody('facebookPostsBody');
-    if (!posts.length) { appendEmptyRow(body, 8, 'No dated Facebook posts are available for this period.'); return; }
+    if (!posts.length) { appendEmptyRow(body, 9, 'No dated Facebook posts are available for this period.'); return; }
     posts.slice(0, 5).forEach(function (post, index) {
       const row = document.createElement('tr');
       appendNumberCell(row, index + 1);

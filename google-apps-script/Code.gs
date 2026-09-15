@@ -727,6 +727,7 @@ function stripPrivatePostFields_(post) {
     reactions: post.reactions,
     comments: post.comments,
     shares: post.shares,
+        views: post._post_media_views,
     created_time: post.created_time,
     message: post.message,
     permalink_url: post.permalink_url

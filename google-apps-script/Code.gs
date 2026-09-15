@@ -180,7 +180,7 @@ function getDashboardData(fromDate, toDate) {
   }).slice(0, 5).map(function(post) {
     return Object.assign({}, post, {
       total_engagement: facebookPostScore_(post),
-      engagement_rate: currentMetrics.page_followers
+      engagement_rate: currentMetrics.impressions
         ? round_((facebookPostScore_(post) / currentMetrics.page_followers) * 100, 2)
         : 0
     });
@@ -333,10 +333,10 @@ function fetchAndTransformAnalytics_(lookbackDays) {
 
   const latestFollowers = last_(followersEvolution);
   const followerCount = latestFollowers ? latestFollowers.followers : 0;
-  const engagementRate = followerCount > 0
-    ? ((postTotals.reactions + postTotals.comments + postTotals.shares) / followerCount) * 100
+  const engagementDenominator = postTotals.post_media_views;
+  const engagementRate = engagementDenominator > 0
+    ? ((postTotals.reactions + postTotals.comments + postTotals.shares) / engagementDenominator) * 100
     : 0;
-
   return {
     page_followers: followerCount,
     followers_evolution: followersEvolution,

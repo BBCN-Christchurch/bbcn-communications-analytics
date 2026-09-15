@@ -381,7 +381,7 @@ function getRecentPosts_() {
 function transformPost_(rawPost) {
   const postId = rawPost.id;
   const reactionTypes = getPostInsight_(postId, 'post_reactions_by_type_total');
-  const postMediaViews = getPostViews_(postId);
+  const postMediaViews = getPostReach_(postId);
   // These deliberately use the explicit endpoints in the project mapping,
   // rather than relying solely on nested fields from /{page_id}/posts.
   const comments = getPostCommentCount_(postId);
@@ -404,18 +404,18 @@ function transformPost_(rawPost) {
   };
 }
 
-function getPostViews_(postId) {
+function getPostReach_(postId) {
+  const uniqueReach = getPostInsight_(postId, 'post_impressions_unique');
+  if (insightLatestValue_(uniqueReach) > 0) return uniqueReach;
   const mediaViews = getPostInsight_(postId, 'post_media_view');
-  const mediaValue = insightLatestValue_(mediaViews);
-  if (mediaValue > 0) return mediaViews;
-  // Meta may omit post_media_view for Pages/posts. Use post impressions as
-  // the closest available view count so the dashboard does not show false zeros.
+  if (insightLatestValue_(mediaViews) > 0) return mediaViews;
+  // Fallback when Meta does not expose unique post reach.
   const impressions = getPostInsight_(postId, 'post_impressions');
   if (insightLatestValue_(impressions) > 0) {
-    Logger.log('Using post_impressions as views for post ' + postId);
+    Logger.log('Using post_impressions as reach fallback for post ' + postId);
     return impressions;
   }
-  return mediaViews;
+  return uniqueReach;
 }
 /** /{post_id}/comments?summary=true from the required mapping. */
 function getPostCommentCount_(postId) {
@@ -743,7 +743,7 @@ function stripPrivatePostFields_(post) {
     reactions: post.reactions,
     comments: post.comments,
     shares: post.shares,
-        views: post._post_media_views,
+        reach: post._post_media_views,
     created_time: post.created_time,
     message: post.message,
     permalink_url: post.permalink_url

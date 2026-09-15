@@ -382,7 +382,7 @@ function ga4ParseArticleMetadata_(html, requestedPath) {
 
   // Hail embeds the article title in its page JSON entity.
   const requestedId = String(requestedPath || '').replace(/\/$/, '').split('/').pop();
-  const hailPattern = requestedId ? new RegExp('"type":"article","entity":\\{"id":"' + requestedId + '","title":"((?:\\\\.|[^"])*)"', 'i') : null;
+  const hailPattern = requestedId ? new RegExp('"id":"' + requestedId + '","title":"((?:\\\\.|[^"])*)"', 'i') : null;
   const hailArticle = hailPattern ? String(html || '').match(hailPattern) : null;
   if (hailArticle) {
     title = hailArticle[1];

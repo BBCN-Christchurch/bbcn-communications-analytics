@@ -470,7 +470,10 @@ function getCurrentPageFollowers_() {
 function getPostInsight_(postId, metric) {
   try {
     // Post insight names follow the same /insights?metric=<name> convention.
-    return graphGet_('/' + postId + '/insights', { metric: metric }).data || [];
+    const response = graphGet_('/' + postId + '/insights', { metric: metric, period: 'lifetime' });
+    const data = response.data || [];
+    Logger.log('Post insight ' + metric + ' for ' + postId + ': ' + JSON.stringify(data));
+    return data;
   } catch (error) {
     // Some post insight metrics are unavailable for older posts or permissions.
     // The post itself remains usable, so record a warning and return zero.

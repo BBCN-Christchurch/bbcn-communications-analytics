@@ -26,7 +26,7 @@ const CONFIG = {
     reactions: ['date', 'reactions'],
     comments: ['date', 'comments'],
     // New columns are appended so existing rows remain aligned after upgrade.
-    posts: ['post_id', 'media_available', 'reactions', 'comments', 'shares', 'fetched_at', 'created_time', 'message', 'permalink_url'],
+    posts: ['post_id', 'media_available', 'reactions', 'comments', 'shares', 'reach', 'fetched_at', 'created_time', 'message', 'permalink_url'],
     summary: ['generated_at', 'month', 'followers_end', 'followers_change', 'gained_followers', 'lost_followers', 'impressions', 'reach', 'engagement_rate', 'total_posts', 'total_reactions', 'total_comments', 'total_shares']
   }
 };
@@ -570,7 +570,7 @@ function upsertPosts_(posts) {
   const fetchedAt = new Date().toISOString();
   const rows = posts.map(function(post) {
     return [
-      post.post_id, post.media_available, post.reactions, post.comments, post.shares, fetchedAt,
+      post.post_id, post.media_available, post.reactions, post.comments, post.shares, post.reach || post._post_media_views || 0, fetchedAt,
       post.created_time, post.message, post.permalink_url
     ];
   });

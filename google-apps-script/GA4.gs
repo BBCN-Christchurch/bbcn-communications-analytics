@@ -379,6 +379,12 @@ function ga4ParseArticleMetadata_(html) {
     if (timeTag) publicationDate = ga4HtmlAttribute_(timeTag[0], 'datetime') || '';
   }
 
+  // Hail embeds the article title in its page JSON entity.
+  const hailArticle = String(html || '').match(/"type":"article","entity":\{"id":"[^"]+","title":"((?:\\.|[^"])*)"/i);
+  if (hailArticle) {
+    try { title = JSON.parse('"' + hailArticle[1] + '"'); } catch (ignored) { title = hailArticle[1]; }
+  }
+
   // Hail may use the site name in og:title. Prefer the article's visible heading.
   const headingTag = String(html || '').match(/<(?:h1|h2)\b[^>]*>([\s\S]*?)<\/(?:h1|h2)>/i);
   if (headingTag) {

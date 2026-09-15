@@ -39,12 +39,12 @@ Open **Project Settings → Script properties** and confirm these values:
 | --- | --- | --- |
 | `GA4_PROPERTY_ID` | Yes | The numeric property ID, such as `123456789`; do not use the `G-` Measurement ID. |
 | `HAIL_SITE_URL` | Yes | `https://bbcn.org.nz` |
-| `HAIL_ARTICLE_PATH_PATTERN` | No | `/article/` for the current Hail article URL format. |
+| `HAIL_ARTICLE_PATH_PATTERN` | No | `/a/` for the current Hail article URL format. |
 | `GA4_TIMEZONE` | No | `Pacific/Auckland` |
 | `GA4_INCLUDE_UNDATED_ARTICLES` | No | `false` for a strict six-month publication-date filter. |
 | `ALERT_EMAIL` | No | Address that should receive refresh-failure messages. |
 
-The public BBCN Hail articles currently use URLs such as `https://hail.to/.../article/...`, so `/article/` is the appropriate path pattern. If `HAIL_ARTICLE_PATH_PATTERN` was previously entered as `/a/`, change it to `/article/`.
+The public BBCN Hail articles currently use URLs such as `https://hail.to/.../a/...`, so `/a/` is the appropriate path pattern. If `HAIL_ARTICLE_PATH_PATTERN` was previously entered as `/a/`, change it to `/a/`.
 
 ## Test and initialise
 
@@ -128,6 +128,6 @@ The response contains `traffic.weekly`, `traffic.monthly`, `traffic.yearly`, `tr
 - **Permission denied:** add the Apps Script Google account as a Viewer on the GA4 property.
 - **Property not found:** use the numeric GA4 Property ID, not the `G-` Measurement ID.
 - **Traffic sheets are empty:** verify Realtime data, wait until the next day, then rerun `weeklyGA4Refresh`; the collector intentionally reports through yesterday.
-- **Article sheet is empty but traffic exists:** change `HAIL_ARTICLE_PATH_PATTERN` to `/article/`, confirm article visits are present in GA4, and review the execution log for missing publication dates.
+- **Article sheet is empty but traffic exists:** change `HAIL_ARTICLE_PATH_PATTERN` to `/a/`, confirm article visits are present in GA4, and review the execution log for missing publication dates.
 - **Traffic sources are empty:** paste the updated `GA4.gs`, run `weeklyGA4Refresh`, and confirm the new `ga4_sources` tab contains rows.
 - **Unexpected columns:** back up and rename or clear a manually created `ga4_traffic`, `ga4_sources`, or `ga4_articles` tab, then rerun setup. The script refuses to silently reinterpret existing data.

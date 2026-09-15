@@ -4,7 +4,7 @@
  * Required Script Properties:
  *   GA4_PROPERTY_ID              Numeric GA4 property ID (not the G- tag ID)
  *   HAIL_SITE_URL                Public website URL, for example https://bbcn.org.nz
- *   HAIL_ARTICLE_PATH_PATTERN    Optional JavaScript regex; defaults to /article/
+ *   HAIL_ARTICLE_PATH_PATTERN    Optional JavaScript regex; defaults to /a/
  *   GA4_TIMEZONE                 Optional; defaults to the Apps Script time zone
  *   GA4_INCLUDE_UNDATED_ARTICLES Optional true/false; defaults to false
  *
@@ -701,7 +701,7 @@ function ga4PropertyId_() {
 }
 
 function ga4ArticlePathRegex_() {
-  const raw = PropertiesService.getScriptProperties().getProperty('HAIL_ARTICLE_PATH_PATTERN') || '/article/';
+  const raw = PropertiesService.getScriptProperties().getProperty('HAIL_ARTICLE_PATH_PATTERN') || '/a/';
   try {
     return new RegExp(raw, 'i');
   } catch (error) {

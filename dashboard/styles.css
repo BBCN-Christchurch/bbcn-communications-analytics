@@ -139,6 +139,8 @@ h3 { margin-bottom: 0.2rem; font-size: 1.05rem; line-height: 1.25; }
 .mini-metrics span { display: block; margin-bottom: 0.3rem; color: var(--ink-soft); font-size: 0.875rem; font-weight: 700; }
 .mini-metrics strong { display: block; font-size: 1.45rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .subscriber-metrics { margin-top: 0.9rem; }
+.attribution-heading { margin: 1rem 0 0.55rem; }
+.attribution-heading h3 { margin: 0; color: var(--website); font-size: 1rem; }
 .attribution-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin: 0.9rem 0; }
 .attribution-summary article { padding: 0.9rem 1rem; border: 1px solid rgba(0,146,69,0.22); border-radius: 14px; background: rgba(255,255,255,0.86); }
 .attribution-summary span, .attribution-summary small { display: block; color: var(--ink-soft); font-size: 0.78rem; font-weight: 700; }

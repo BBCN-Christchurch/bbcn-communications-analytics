@@ -44,7 +44,7 @@ Open **Project Settings → Script properties** and confirm these values:
 | `GA4_INCLUDE_UNDATED_ARTICLES` | No | `false` for a strict six-month publication-date filter. |
 | `ALERT_EMAIL` | No | Address that should receive refresh-failure messages. |
 
-The public BBCN Hail articles currently use URLs such as `https://hail.to/.../a/...`, so `/a/` is the appropriate path pattern. If `HAIL_ARTICLE_PATH_PATTERN` was previously entered as `/a/`, change it to `/a/`.
+The public BBCN Hail articles currently use URLs such as `https://hail.to/.../a/...`, so `/a/` is the appropriate path pattern. If `HAIL_ARTICLE_PATH_PATTERN` was previously entered as `/article/`, change it to `/a/`.
 
 ## Test and initialise
 

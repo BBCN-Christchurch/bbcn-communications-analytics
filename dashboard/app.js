@@ -496,6 +496,7 @@
       const id = document.createElement('small'); id.textContent = post.post_id || ''; postCell.appendChild(id);
       row.appendChild(postCell);
       appendTextCell(row, post.created_time ? formatDate(post.created_time) : '—');
+      appendNumberCell(row, post.views || post._post_media_views);
       appendNumberCell(row, post.reactions);
       appendNumberCell(row, post.comments);
       appendNumberCell(row, post.shares);

@@ -277,7 +277,7 @@ function ga4FetchRecentArticles_() {
     };
   }).filter(function(candidate) { return candidate.url !== ''; });
 
-  const metadata = ga4FetchArticleMetadata_(candidates.map(function(candidate) { return candidate.url; }));
+  const metadata = ga4FetchArticleMetadata_(candidates);
   let missingPublicationDates = 0;
 
   const output = candidates.map(function(candidate, index) {
@@ -315,10 +315,11 @@ function ga4FetchRecentArticles_() {
   });
 }
 
-function ga4FetchArticleMetadata_(urls) {
+function ga4FetchArticleMetadata_(candidates) {
   const results = [];
-  for (let start = 0; start < urls.length; start += GA4_CONFIG.ARTICLE_FETCH_BATCH_SIZE) {
-    const batchUrls = urls.slice(start, start + GA4_CONFIG.ARTICLE_FETCH_BATCH_SIZE);
+  for (let start = 0; start < candidates.length; start += GA4_CONFIG.ARTICLE_FETCH_BATCH_SIZE) {
+    const batchCandidates = candidates.slice(start, start + GA4_CONFIG.ARTICLE_FETCH_BATCH_SIZE);
+    const batchUrls = batchCandidates.map(function(candidate) { return candidate.url; });
     const requests = batchUrls.map(function(url) {
       return {
         url: url,
@@ -343,13 +344,13 @@ function ga4FetchArticleMetadata_(urls) {
         results.push({ title: '', publication_date: '' });
         return;
       }
-      results.push(ga4ParseArticleMetadata_(response.getContentText()));
+      results.push(ga4ParseArticleMetadata_(response.getContentText(), batchCandidates[index].path));
     });
   }
   return results;
 }
 
-function ga4ParseArticleMetadata_(html) {
+function ga4ParseArticleMetadata_(html, requestedPath) {
   const meta = {};
   const metaTags = String(html || '').match(/<meta\b[^>]*>/gi) || [];
   metaTags.forEach(function(tag) {
@@ -380,9 +381,11 @@ function ga4ParseArticleMetadata_(html) {
   }
 
   // Hail embeds the article title in its page JSON entity.
-  const hailArticle = String(html || '').match(/"type":"article","entity":\{"id":"[^"]+","title":"((?:\\.|[^"])*)"/i);
+  const requestedId = String(requestedPath || '').replace(/\/$/, '').split('/').pop();
+  const hailPattern = requestedId ? new RegExp('"type":"article","entity":\\{"id":"' + requestedId + '","title":"((?:\\\\.|[^"])*)"', 'i') : null;
+  const hailArticle = hailPattern ? String(html || '').match(hailPattern) : null;
   if (hailArticle) {
-    try { title = JSON.parse('"' + hailArticle[1] + '"'); } catch (ignored) { title = hailArticle[1]; }
+    title = hailArticle[1];
   }
 
   // Hail may use the site name in og:title. Prefer the article's visible heading.

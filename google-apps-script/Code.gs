@@ -406,17 +406,8 @@ function transformPost_(rawPost) {
 }
 
 function getPostReach_(postId) {
-  const uniqueReach = getPostInsight_(postId, 'post_impressions_unique');
-  if (insightLatestValue_(uniqueReach) > 0) return uniqueReach;
-  const mediaViews = getPostInsight_(postId, 'post_media_view');
-  if (insightLatestValue_(mediaViews) > 0) return mediaViews;
-  // Fallback when Meta does not expose unique post reach.
-  const impressions = getPostInsight_(postId, 'post_impressions');
-  if (insightLatestValue_(impressions) > 0) {
-    Logger.log('Using post_impressions as reach fallback for post ' + postId);
-    return impressions;
-  }
-  return uniqueReach;
+  // post_media_view is the supported post-level exposure metric for this Page.
+  return getPostInsight_(postId, 'post_media_view');
 }
 /** /{post_id}/comments?summary=true from the required mapping. */
 function getPostCommentCount_(postId) {

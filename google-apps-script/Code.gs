@@ -161,6 +161,7 @@ function getDashboardData(fromDate, toDate) {
       reactions: toNumber_(row.reactions),
       comments: toNumber_(row.comments),
       shares: toNumber_(row.shares),
+      reach: toNumber_(row.reach),
       created_time: String(row.created_time || ''),
       message: String(row.message || ''),
       permalink_url: String(row.permalink_url || '')

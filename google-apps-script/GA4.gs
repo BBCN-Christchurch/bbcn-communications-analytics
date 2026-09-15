@@ -380,9 +380,9 @@ function ga4ParseArticleMetadata_(html) {
   }
 
   // Hail may use the site name in og:title. Prefer the article's visible heading.
-  const headingTag = String(html || '').match(/<(?:h1|h2)\\b[^>]*>([\\s\\S]*?)<\\/(?:h1|h2)>/i);
+  const headingTag = String(html || '').match(/<(?:h1|h2)\b[^>]*>([\s\S]*?)<\/(?:h1|h2)>/i);
   if (headingTag) {
-    const heading = ga4DecodeHtml_(headingTag[1].replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim());
+    const heading = ga4DecodeHtml_(headingTag[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
     if (heading && !/^burnside and bryndwr community network$/i.test(heading)) title = heading;
   }
 

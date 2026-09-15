@@ -19,7 +19,7 @@ Google's setup guide: https://support.google.com/analytics/answer/14183469
 2. Open **Extensions → Apps Script**.
 3. Click **+ → Script** and name the new file `GA4`.
 4. Paste the complete contents of [`GA4.gs`](./GA4.gs) into it and save.
-5. Replace the existing `doGet` function in `Code.gs` with the current project version, or add its `resource === 'ga4'` branch. This exposes the GA4 data to the later dashboard.
+5. Replace the existing `doGet` function in `Facebook.gs` with the current project version, or add its `resource === 'ga4'` branch. This exposes the GA4 data to the later dashboard.
 
 ## Enable the Google Analytics Data API
 
@@ -108,7 +108,7 @@ The article tab is replaced on each refresh, so it remains a compact current rep
 
 ## Dashboard JSON
 
-After adding the GA4 branch to `Code.gs`, redeploy the Apps Script web app as a new version. Request:
+After adding the GA4 branch to `Facebook.gs`, redeploy the Apps Script web app as a new version. Request:
 
 ```text
 https://script.google.com/macros/s/DEPLOYMENT_ID/exec?resource=ga4

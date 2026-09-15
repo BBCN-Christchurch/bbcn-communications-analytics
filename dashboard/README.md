@@ -5,7 +5,7 @@ A dependency-light static dashboard for the BBCN Facebook, Hail/GA4, and Sender.
 ## Connect the live spreadsheet data
 
 1. In the Google Sheet, open **Extensions → Apps Script**.
-2. Ensure `Code.gs`, `Sender.gs`, and `GA4.gs` are in the same Apps Script project.
+2. Ensure `Facebook.gs`, `Sender.gs`, and `GA4.gs` are in the same Apps Script project.
 3. Deploy with **Deploy → Manage deployments → New deployment → Web app**.
 4. Set **Execute as** to **Me**. For a public GitHub Pages dashboard, set **Who has access** to **Anyone**.
 5. Copy the deployed URL ending in `/exec`.
@@ -64,7 +64,7 @@ Use lowercase, stable names with underscores. Do not change a campaign's UTM val
 
 ## Upgrade after adding attribution
 
-1. Replace `Code.gs`, `GA4.gs`, and `Sender.gs` in Apps Script with the updated project files.
+1. Replace `Facebook.gs`, `GA4.gs`, and `Sender.gs` in Apps Script with the updated project files.
 2. Run `dailyRefresh` once to add Facebook post dates, messages, and links to the existing `posts` tab.
 3. Run `weeklyGA4Refresh` once to create and populate `ga4_sources`.
 4. Deploy a new Apps Script web-app version.

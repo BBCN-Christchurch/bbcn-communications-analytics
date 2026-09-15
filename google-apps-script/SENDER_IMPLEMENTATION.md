@@ -7,7 +7,7 @@ This integration tracks regular email campaigns only. It does not request workfl
 1. In Sender.net, open **Settings → API access tokens** and create a read-capable API token.
 2. Open the same Google Sheet and Apps Script project used for Facebook analytics.
 3. Add a new script file named `Sender.gs` and paste in the complete contents of [`Sender.gs`](./Sender.gs).
-4. Replace `Code.gs` with the latest project version. Its `doGet` function now supports `?resource=sender` without changing the existing Facebook response.
+4. Replace `Facebook.gs` with the latest project version. Its `doGet` function now supports `?resource=sender` without changing the existing Facebook response.
 5. Open **Project Settings → Script properties** and add:
    - Name: `SENDER_API_TOKEN`
    - Value: the token only, with no `Bearer` prefix or quotation marks.

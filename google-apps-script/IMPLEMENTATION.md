@@ -31,7 +31,7 @@ Do not put the token in a worksheet cell or commit it to source control.
 
 1. Create a blank Google Sheet.
 2. Open **Extensions → Apps Script**.
-3. Replace the generated `Code.gs` contents with [`Code.gs`](./Code.gs).
+3. Replace the generated `Facebook.gs` contents with [`Facebook.gs`](./Facebook.gs).
 4. Click **Project Settings** (gear) → **Script properties** → **Add script property** and add:
 
    - `FB_PAGE_ID` — the numeric Facebook Page ID.

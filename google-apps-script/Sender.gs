@@ -1,7 +1,7 @@
 /**
  * Sender.net regular email campaign analytics -> Google Sheets
  *
- * Add this file to the same bound Apps Script project as Code.gs.
+ * Add this file to the same bound Apps Script project as Facebook.gs.
  * Set the Script Property SENDER_API_TOKEN, then run setupSenderAnalytics().
  *
  * Scope:

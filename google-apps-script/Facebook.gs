@@ -333,7 +333,7 @@ function fetchAndTransformAnalytics_(lookbackDays) {
 
   const latestFollowers = last_(followersEvolution);
   const followerCount = latestFollowers ? latestFollowers.followers : 0;
-  const engagementDenominator = postTotals.post_media_views;
+  const engagementDenominator = sumInsightValues_(uniqueMediaViewers);
   const engagementRate = engagementDenominator > 0
     ? ((postTotals.reactions + postTotals.comments + postTotals.shares) / engagementDenominator) * 100
     : 0;

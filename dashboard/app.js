@@ -202,8 +202,8 @@
     const lost = movement.length ? sum(movement, 'lost') : numeric(data.lost_followers);
     const impressionTotal = impressions.length ? sum(impressions, 'impressions') : numeric(data.impressions);
     const reachTotal = reach.length ? sum(reach, 'reach') : numeric(data.reach);
-    const derivedEngagement = impressionTotal && rangedPosts.length
-      ? rangedPosts.reduce(function (total, post) { return total + numeric(post.reactions) + numeric(post.comments) + numeric(post.shares); }, 0) / impressionTotal * 100
+    const derivedEngagement = reachTotal && rangedPosts.length
+      ? rangedPosts.reduce(function (total, post) { return total + numeric(post.reactions) + numeric(post.comments) + numeric(post.shares); }, 0) / reachTotal * 100
       : 0;
     const latestEngagement = derivedEngagement || (engagement.length
       ? numeric(engagement[engagement.length - 1].engagement_rate)
@@ -238,7 +238,7 @@
       dataset('Comments', valuesForDates(responseRows, 'comments', responseRows), colours.gold)
     ]);
     const topPosts = data.top_performing_posts || topPostsForRange(data.recent_posts || [], data.page_followers);
-    renderFacebookPosts(topPostsForRange(rangedPosts, impressionTotal));
+    renderFacebookPosts(topPostsForRange(rangedPosts, reachTotal));
     renderCommentPosts(rangedPosts);
   }
 

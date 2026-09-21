@@ -388,8 +388,8 @@
       options: Object.assign(cartesianOptions(false), {
         scales: {
           x: chartXAxis(),
-          y: chartYAxis('left'),
-          change: chartYAxis('right', true)
+          y: Object.assign(chartYAxis('left'), { title: { display: true, text: 'Total subscribers' } }),
+          change: Object.assign(chartYAxis('right', true), { title: { display: true, text: 'Net change' } })
         }
       })
     });

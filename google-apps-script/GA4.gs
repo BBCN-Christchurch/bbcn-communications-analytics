@@ -382,10 +382,11 @@ function ga4ParseArticleMetadata_(html, requestedPath) {
 
   // Hail embeds the article title in its page JSON entity.
   const requestedId = String(requestedPath || '').replace(/\/$/, '').split('/').pop();
-  const hailPattern = requestedId ? new RegExp('"id":"' + requestedId + '","title":"((?:\\\\.|[^"])*)"', 'i') : null;
+  const hailPattern = requestedId ? new RegExp('"id":"' + requestedId + '","title":"((?:\\\\.|[^"])*)"[\\s\\S]*?,"date":"([^"]+)"', 'i') : null;
   const hailArticle = hailPattern ? String(html || '').match(hailPattern) : null;
   if (hailArticle) {
     title = hailArticle[1];
+    if (!publicationDate && hailArticle[2]) publicationDate = hailArticle[2];
   }
 
   // Hail may use the site name in og:title. Prefer the article's visible heading.

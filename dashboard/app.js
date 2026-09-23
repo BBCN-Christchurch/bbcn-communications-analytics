@@ -250,7 +250,7 @@
       ['websiteTrafficChart', 'trafficSourcesChart'].forEach(destroyChart);
       toggleChart('websiteTrafficChart', 'websiteTrafficEmpty', false);
       toggleChart('trafficSourcesChart', 'trafficSourcesEmpty', false);
-      renderEmptyTable('articlesBody', 5, 'Website data is unavailable.');
+      renderEmptyTable('articlesBody', 4, 'Website data is unavailable.');
       renderEmptyTable('trafficSourcesBody', 4, 'Traffic-source data is unavailable.');
       return;
     }
@@ -539,7 +539,7 @@
     if (state.articleSort === 'date') rows.sort(function (a, b) { return String(b.publication_date).localeCompare(String(a.publication_date)); });
     else if (state.articleSort === 'title') rows.sort(function (a, b) { return String(a.article_title).localeCompare(String(b.article_title)); });
     else rows.sort(function (a, b) { return numeric(b.views) - numeric(a.views); });
-    if (!rows.length) { appendEmptyRow(body, 5, 'No recent Hail articles are available.'); return; }
+    if (!rows.length) { appendEmptyRow(body, 4, 'No recent Hail articles are available.'); return; }
     rows.forEach(function (article) {
       const row = document.createElement('tr');
       const cell = document.createElement('td');
@@ -550,7 +550,6 @@
         cell.appendChild(link);
       } else cell.textContent = label;
       row.appendChild(cell);
-      appendTextCell(row, article.publication_date ? formatDate(article.publication_date) : '—');
       appendNumberCell(row, article.views); appendNumberCell(row, article.sessions); appendNumberCell(row, article.users);
       body.appendChild(row);
     });

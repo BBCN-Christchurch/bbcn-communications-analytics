@@ -264,8 +264,8 @@ function ga4FetchRecentArticles_() {
 
   if (analyticsRows.length > GA4_CONFIG.ARTICLE_FETCH_LIMIT) {
     Logger.log(
-      'Article discovery returned ' + analyticsRows.length + ' pages. Only the top ' +
-      GA4_CONFIG.ARTICLE_FETCH_LIMIT + ' by views will be checked.'
+      'GA4 returned ' + analyticsRows.length + ' article paths. The Hail index is authoritative; only the top '
+      GA4_CONFIG.ARTICLE_FETCH_LIMIT + ' GA4-only fallback paths are checked.'
     );
   }
 
@@ -342,29 +342,53 @@ function ga4FetchRecentArticles_() {
 
 function ga4FetchHailArticleIndex_() {
   const siteUrl = ga4RequiredProperty_('HAIL_SITE_URL').replace(/\/+$/, '');
-  try {
-    const response = UrlFetchApp.fetch(siteUrl, {
-      method: 'get', followRedirects: true, muteHttpExceptions: true,
-      headers: { 'User-Agent': 'BBCN analytics collector/1.0' }
-    });
-    if (response.getResponseCode() < 200 || response.getResponseCode() >= 400) return [];
-    const html = response.getContentText();
+  const indexUrls = [siteUrl, siteUrl + '/articles'];
+  const articles = [];
+  const seen = {};
+
+  function collect(html) {
     const pattern = /"type":"article","entity":\{"id":"([^"]+)","title":"((?:\\.|[^"])*)"[\s\S]*?,"date":"([^"]+)"/gi;
-    const articles = [];
-    const seen = {};
     let match;
     while ((match = pattern.exec(html)) !== null) {
       if (seen[match[1]]) continue;
       seen[match[1]] = true;
       articles.push({ id: match[1], title: ga4DecodeHtml_(match[2]), publication_date: match[3] });
     }
-    return articles;
-  } catch (error) {
-    Logger.log('Hail article index request failed: ' + error.message);
-    return [];
   }
-}
 
+  // The custom domain can expose only quick links. The canonical Hail page
+  // may expose the full organisation article feed, so discover its slug first.
+  try {
+    const home = UrlFetchApp.fetch(siteUrl, {
+      method: 'get', followRedirects: true, muteHttpExceptions: true,
+      headers: { 'User-Agent': 'BBCN analytics collector/1.0' }
+    });
+    if (home.getResponseCode() >= 200 && home.getResponseCode() < 400) {
+      const homeHtml = home.getContentText();
+      collect(homeHtml);
+      const slugMatch = homeHtml.match(/"slug":"([^"\\]+)"/i);
+      if (slugMatch && slugMatch[1]) {
+        indexUrls.push('https://hail.to/' + slugMatch[1]);
+        indexUrls.push('https://hail.to/' + slugMatch[1] + '/articles');
+      }
+    }
+  } catch (error) {
+    Logger.log('Hail homepage request failed: ' + error.message);
+  }
+
+  indexUrls.forEach(function(url) {
+    try {
+      const response = UrlFetchApp.fetch(url, {
+        method: 'get', followRedirects: true, muteHttpExceptions: true,
+        headers: { 'User-Agent': 'BBCN analytics collector/1.0' }
+      });
+      if (response.getResponseCode() >= 200 && response.getResponseCode() < 400) collect(response.getContentText());
+    } catch (error) {
+      Logger.log('Hail article index request failed for ' + url + ': ' + error.message);
+    }
+  });
+  return articles;
+}
 function ga4ArticleIdFromPath_(path) {
   const match = String(path || '').match(/\/(?:a|article)\/([^/?#]+)/i);
   if (!match) return '';

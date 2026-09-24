@@ -8,6 +8,7 @@
  *   HAIL_ARTICLE_URLS             Optional comma/newline-separated Hail article URLs or /a/ IDs
  *   GA4_TIMEZONE                 Optional; defaults to the Apps Script time zone
  *   GA4_INCLUDE_UNDATED_ARTICLES Optional true/false; defaults to false
+ *   GA4_FILTER_ARTICLE_DATES   Optional true/false; defaults to false
  *
  * Required Apps Script advanced service:
  *   Google Analytics Data API (identifier: AnalyticsData)
@@ -250,6 +251,7 @@ function ga4FetchRecentArticles_() {
   const reportStart = ga4AddMonthsUtc_(reportEnd, -GA4_CONFIG.ARTICLE_LOOKBACK_MONTHS);
   const pathPattern = ga4ArticlePathRegex_();
   const includeUndated = ga4BooleanProperty_('GA4_INCLUDE_UNDATED_ARTICLES', false);
+  const filterArticleDates = ga4BooleanProperty_('GA4_FILTER_ARTICLE_DATES', false);
   const syncedAt = new Date().toISOString();
 
   const analyticsRows = ga4RunReport_(
@@ -311,7 +313,7 @@ function ga4FetchRecentArticles_() {
     const publicationDate = ga4DateOnlyUtc_(page.publication_date || candidate.publication_date);
     if (!publicationDate) missingPublicationDates++;
     if (!publicationDate && !includeUndated) return null;
-    if (publicationDate && (publicationDate < reportStart || publicationDate > reportEnd)) return null;
+    if (filterArticleDates && publicationDate && (publicationDate < reportStart || publicationDate > reportEnd)) return null;
 
     return {
       period_start: reportStart,

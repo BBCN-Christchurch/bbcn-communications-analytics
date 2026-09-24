@@ -264,7 +264,7 @@ function ga4FetchRecentArticles_() {
 
   if (analyticsRows.length > GA4_CONFIG.ARTICLE_FETCH_LIMIT) {
     Logger.log(
-      'GA4 returned ' + analyticsRows.length + ' article paths. The Hail index is authoritative; only the top '
+      'GA4 returned ' + analyticsRows.length + ' article paths. The Hail index is authoritative; only the top ' +
       GA4_CONFIG.ARTICLE_FETCH_LIMIT + ' GA4-only fallback paths are checked.'
     );
   }

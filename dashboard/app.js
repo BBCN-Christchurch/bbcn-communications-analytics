@@ -275,7 +275,11 @@
       dataset('Page views', rows.map(function (row) { return numeric(row.views); }), colours.facebook, true)
     ]);
     renderTrafficSources(data.traffic_sources || []);
-    renderArticles(data.recent_articles || []);
+    const articles = (data.recent_articles || []).filter(function (article) {
+      const date = dateOnly(article.publication_date);
+      return date && date >= state.range.from && date <= state.range.to;
+    });
+    renderArticles(articles);
   }
 
   function renderEmail() {

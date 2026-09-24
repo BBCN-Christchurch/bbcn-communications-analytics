@@ -269,20 +269,45 @@ function ga4FetchRecentArticles_() {
     );
   }
 
-  const candidates = analyticsRows.slice(0, GA4_CONFIG.ARTICLE_FETCH_LIMIT).map(function(row) {
-    return {
-      url: ga4BuildPageUrl_(row.dimensions.hostName, row.dimensions.pagePath),
-      path: String(row.dimensions.pagePath || ''),
-      metrics: row.metrics
-    };
-  }).filter(function(candidate) { return candidate.url !== ''; });
+  // GA4 only returns pages with activity. Use Hail as the article index so
+  // zero-view articles are still included, then attach any matching metrics.
+  const analyticsById = {};
+  analyticsRows.forEach(function(row) {
+    const id = ga4ArticleIdFromPath_(String(row.dimensions.pagePath || ''));
+    if (id) analyticsById[id] = row.metrics || {};
+  });
+  const candidates = [];
+  const seenIds = {};
+  const siteHost = ga4HostFromUrl_(ga4RequiredProperty_('HAIL_SITE_URL'));
+  ga4FetchHailArticleIndex_().forEach(function(article) {
+    if (!article.id || seenIds[article.id]) return;
+    seenIds[article.id] = true;
+    candidates.push({
+      url: ga4BuildPageUrl_(siteHost, '/a/' + encodeURIComponent(article.id)),
+      path: '/a/' + article.id,
+      publication_date: article.publication_date || '',
+      title: article.title || '',
+      metrics: analyticsById[article.id] || {}
+    });
+  });
+  // Retain a fallback for GA4 paths not exposed by Hail's index.
+  analyticsRows.slice(0, GA4_CONFIG.ARTICLE_FETCH_LIMIT).forEach(function(row) {
+    const path = String(row.dimensions.pagePath || '');
+    const id = ga4ArticleIdFromPath_(path);
+    if (id && seenIds[id]) return;
+    const url = ga4BuildPageUrl_(row.dimensions.hostName, path);
+    if (!url) return;
+    if (id) seenIds[id] = true;
+    candidates.push({ url: url, path: path, publication_date: '', title: '', metrics: row.metrics || {} });
+  });
+  Logger.log('Hail article discovery checking ' + candidates.length + ' candidates.');
 
   const metadata = ga4FetchArticleMetadata_(candidates);
   let missingPublicationDates = 0;
 
   const output = candidates.map(function(candidate, index) {
     const page = metadata[index] || {};
-    const publicationDate = ga4DateOnlyUtc_(page.publication_date);
+    const publicationDate = ga4DateOnlyUtc_(page.publication_date || candidate.publication_date);
     if (!publicationDate) missingPublicationDates++;
     if (!publicationDate && !includeUndated) return null;
     if (publicationDate && (publicationDate < reportStart || publicationDate > reportEnd)) return null;
@@ -291,7 +316,7 @@ function ga4FetchRecentArticles_() {
       period_start: reportStart,
       period_end: reportEnd,
       article_url: candidate.url,
-      article_title: page.title || ga4ReadablePath_(candidate.path),
+      article_title: page.title || candidate.title || ga4ReadablePath_(candidate.path),
       publication_date: publicationDate || '',
       views: ga4Number_(candidate.metrics.screenPageViews),
       sessions: ga4Number_(candidate.metrics.sessions),
@@ -315,6 +340,36 @@ function ga4FetchRecentArticles_() {
   });
 }
 
+function ga4FetchHailArticleIndex_() {
+  const siteUrl = ga4RequiredProperty_('HAIL_SITE_URL').replace(/\/+$/, '');
+  try {
+    const response = UrlFetchApp.fetch(siteUrl, {
+      method: 'get', followRedirects: true, muteHttpExceptions: true,
+      headers: { 'User-Agent': 'BBCN analytics collector/1.0' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 400) return [];
+    const html = response.getContentText();
+    const pattern = /"type":"article","entity":\{"id":"([^"]+)","title":"((?:\\.|[^"])*)"[\s\S]*?,"date":"([^"]+)"/gi;
+    const articles = [];
+    const seen = {};
+    let match;
+    while ((match = pattern.exec(html)) !== null) {
+      if (seen[match[1]]) continue;
+      seen[match[1]] = true;
+      articles.push({ id: match[1], title: ga4DecodeHtml_(match[2]), publication_date: match[3] });
+    }
+    return articles;
+  } catch (error) {
+    Logger.log('Hail article index request failed: ' + error.message);
+    return [];
+  }
+}
+
+function ga4ArticleIdFromPath_(path) {
+  const match = String(path || '').match(/\/(?:a|article)\/([^/?#]+)/i);
+  if (!match) return '';
+  try { return decodeURIComponent(match[1]); } catch (ignored) { return match[1]; }
+}
 function ga4FetchArticleMetadata_(candidates) {
   const results = [];
   for (let start = 0; start < candidates.length; start += GA4_CONFIG.ARTICLE_FETCH_BATCH_SIZE) {

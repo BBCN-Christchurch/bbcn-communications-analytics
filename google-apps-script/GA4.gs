@@ -7,7 +7,7 @@
  *   HAIL_ARTICLE_PATH_PATTERN    Optional JavaScript regex; defaults to /a/
  *   HAIL_ARTICLE_URLS             Optional comma/newline-separated Hail article URLs or /a/ IDs
  *   GA4_TIMEZONE                 Optional; defaults to the Apps Script time zone
- *   GA4_INCLUDE_UNDATED_ARTICLES Optional true/false; defaults to false
+ *   GA4_INCLUDE_UNDATED_ARTICLES Optional true/false; defaults to true
  *   GA4_FILTER_ARTICLE_DATES   Optional true/false; defaults to false
  *
  * Required Apps Script advanced service:
@@ -250,7 +250,7 @@ function ga4FetchRecentArticles_() {
   const reportEnd = ga4YesterdayUtc_();
   const reportStart = ga4AddMonthsUtc_(reportEnd, -GA4_CONFIG.ARTICLE_LOOKBACK_MONTHS);
   const pathPattern = ga4ArticlePathRegex_();
-  const includeUndated = ga4BooleanProperty_('GA4_INCLUDE_UNDATED_ARTICLES', false);
+  const includeUndated = ga4BooleanProperty_('GA4_INCLUDE_UNDATED_ARTICLES', true);
   const filterArticleDates = ga4BooleanProperty_('GA4_FILTER_ARTICLE_DATES', false);
   const syncedAt = new Date().toISOString();
 

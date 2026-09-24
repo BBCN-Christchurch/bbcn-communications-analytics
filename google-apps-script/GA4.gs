@@ -106,19 +106,19 @@ function weeklyGA4Refresh() {
     const articleRows = ga4FetchRecentArticles_();
     ga4WriteTrafficRows_(trafficRows);
     ga4WriteSourceRows_(sourceRows);
-    ga4WriteArticleRows_(articleRows);
+    const articleCount = ga4WriteArticleRows_(articleRows);
 
     const refreshedAt = new Date().toISOString();
     PropertiesService.getScriptProperties().setProperty('LAST_GA4_SUCCESS', refreshedAt);
     PropertiesService.getScriptProperties().deleteProperty('LAST_GA4_ERROR');
     Logger.log(
       'GA4 refresh complete: ' + trafficRows.length + ' traffic periods and ' +
-      sourceRows.length + ' traffic-source rows and ' + articleRows.length + ' recent articles.'
+      sourceRows.length + ' traffic-source rows and ' + articleCount + ' total articles retained.'
     );
     return {
       traffic_periods: trafficRows.length,
       traffic_sources: sourceRows.length,
-      recent_articles: articleRows.length,
+      recent_articles: articleCount,
       refreshed_at: refreshedAt
     };
   } catch (error) {
@@ -552,7 +552,12 @@ function getGA4DashboardData(fromDate, toDate) {
     .map(ga4NormalizeSourceRow_)
     .filter(function(row) { return ga4RowOverlaps_(row, from, to); });
   const articles = ga4ReadRows_(GA4_CONFIG.ARTICLE_TAB, GA4_CONFIG.ARTICLE_HEADERS)
-    .map(ga4NormalizeArticleRow_);
+    .map(ga4NormalizeArticleRow_)
+    .filter(function(row) {
+      if (!row.publication_date) return true;
+      const date = ga4DateOnlyUtc_(row.publication_date);
+      return date && date >= from && date <= to;
+    });
 
   return {
     period: { from: ga4DateText_(from), to: ga4DateText_(to) },
@@ -765,19 +770,38 @@ function ga4WriteSourceRows_(rows) {
 
 function ga4WriteArticleRows_(rows) {
   const sheet = ga4GetSheet_(GA4_CONFIG.ARTICLE_TAB);
+  const existing = ga4ReadRows_(GA4_CONFIG.ARTICLE_TAB, GA4_CONFIG.ARTICLE_HEADERS);
+  const byUrl = {};
+
+  existing.forEach(function(row) {
+    const url = String(row.article_url || '').trim();
+    if (url) byUrl[url] = row;
+  });
+  rows.forEach(function(row) {
+    const url = String(row.article_url || '').trim();
+    if (url) byUrl[url] = row;
+  });
+
+  const merged = Object.keys(byUrl).map(function(url) { return byUrl[url]; });
+  merged.sort(function(a, b) {
+    const aDate = ga4DateOnlyUtc_(a.publication_date);
+    const bDate = ga4DateOnlyUtc_(b.publication_date);
+    return (bDate ? bDate.getTime() : 0) - (aDate ? aDate.getTime() : 0);
+  });
+
   const existingCount = Math.max(0, sheet.getLastRow() - 1);
   if (existingCount) sheet.getRange(2, 1, existingCount, GA4_CONFIG.ARTICLE_HEADERS.length).clearContent();
-  if (!rows.length) return;
+  if (!merged.length) return 0;
 
-  const values = rows.map(function(row) {
+  const values = merged.map(function(row) {
     return GA4_CONFIG.ARTICLE_HEADERS.map(function(header) { return row[header]; });
   });
   sheet.getRange(2, 1, values.length, GA4_CONFIG.ARTICLE_HEADERS.length).setValues(values);
   sheet.getRange(2, 1, values.length, 2).setNumberFormat('yyyy-mm-dd');
   sheet.getRange(2, 5, values.length, 1).setNumberFormat('yyyy-mm-dd');
   sheet.getRange(2, 6, values.length, 4).setNumberFormat('#,##0');
+  return merged.length;
 }
-
 function ga4ReadRows_(tabName, headers) {
   const sheet = ga4GetSheet_(tabName);
   const count = Math.max(0, sheet.getLastRow() - 1);

@@ -5,6 +5,7 @@
  *   GA4_PROPERTY_ID              Numeric GA4 property ID (not the G- tag ID)
  *   HAIL_SITE_URL                Public website URL, for example https://bbcn.org.nz
  *   HAIL_ARTICLE_PATH_PATTERN    Optional JavaScript regex; defaults to /a/
+ *   HAIL_ARTICLE_URLS             Optional comma/newline-separated Hail article URLs or /a/ IDs
  *   GA4_TIMEZONE                 Optional; defaults to the Apps Script time zone
  *   GA4_INCLUDE_UNDATED_ARTICLES Optional true/false; defaults to false
  *
@@ -342,19 +343,40 @@ function ga4FetchRecentArticles_() {
 
 function ga4FetchHailArticleIndex_() {
   const siteUrl = ga4RequiredProperty_('HAIL_SITE_URL').replace(/\/+$/, '');
-  const indexUrls = [siteUrl, siteUrl + '/articles'];
+  const indexUrls = [siteUrl, siteUrl + '/articles', siteUrl + '/sitemap.xml'];
   const articles = [];
   const seen = {};
+
+  function addArticle(id, title, publicationDate) {
+    if (!id || seen[id]) return;
+    seen[id] = true;
+    articles.push({ id: id, title: title || '', publication_date: publicationDate || '' });
+  }
 
   function collect(html) {
     const pattern = /"type":"article","entity":\{"id":"([^"]+)","title":"((?:\\.|[^"])*)"[\s\S]*?,"date":"([^"]+)"/gi;
     let match;
     while ((match = pattern.exec(html)) !== null) {
-      if (seen[match[1]]) continue;
-      seen[match[1]] = true;
-      articles.push({ id: match[1], title: ga4DecodeHtml_(match[2]), publication_date: match[3] });
+      addArticle(match[1], ga4DecodeHtml_(match[2]), match[3]);
     }
   }
+
+  function collectSitemap(xml) {
+    const locPattern = /<loc>\s*(https?:\/\/[^<]+)\s*<\/loc>/gi;
+    let match;
+    while ((match = locPattern.exec(xml)) !== null) {
+      const id = ga4ArticleIdFromPath_(match[1]);
+      if (id) addArticle(id, '', '');
+    }
+  }
+
+  // Explicit URLs are a reliable fallback for published articles that Hail
+  // does not expose through its public website index or sitemap.
+  const configuredUrls = PropertiesService.getScriptProperties().getProperty('HAIL_ARTICLE_URLS') || '';
+  configuredUrls.split(/[\s,]+/).forEach(function(url) {
+    const id = ga4ArticleIdFromPath_(url);
+    if (id) addArticle(id, '', '');
+  });
 
   // The custom domain can expose only quick links. The canonical Hail page
   // may expose the full organisation article feed, so discover its slug first.
@@ -370,6 +392,7 @@ function ga4FetchHailArticleIndex_() {
       if (slugMatch && slugMatch[1]) {
         indexUrls.push('https://hail.to/' + slugMatch[1]);
         indexUrls.push('https://hail.to/' + slugMatch[1] + '/articles');
+        indexUrls.push('https://hail.to/' + slugMatch[1] + '/sitemap.xml');
       }
     }
   } catch (error) {
@@ -382,7 +405,10 @@ function ga4FetchHailArticleIndex_() {
         method: 'get', followRedirects: true, muteHttpExceptions: true,
         headers: { 'User-Agent': 'BBCN analytics collector/1.0' }
       });
-      if (response.getResponseCode() >= 200 && response.getResponseCode() < 400) collect(response.getContentText());
+      if (response.getResponseCode() >= 200 && response.getResponseCode() < 400) {
+        const body = response.getContentText();
+        if (/sitemap\.xml$/i.test(url)) collectSitemap(body); else collect(body);
+      }
     } catch (error) {
       Logger.log('Hail article index request failed for ' + url + ': ' + error.message);
     }
